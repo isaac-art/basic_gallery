@@ -33,7 +33,8 @@
     <br>
     <hr>
     <br><br>
-    <i>UNIVERSAL BASIC GALLERY HAS BURNT {{tally/24}} DAYS OF UBI</i>
+    <i>UNIVERSAL BASIC GALLERY HAS BURNT {{tally/24}} DAYS OF UBI</i><br>
+    <a href="https://etherscan.io/address/0x45527f75E9e69900Dd1A9C9e8af1240D4C5C9E89">CONTRACT 0x45527f75E9e69900Dd1A9C9e8af1240D4C5C9E89</a>
     <br><br><br>
     <table>
       <thead>
@@ -59,7 +60,6 @@ import { ethers } from "ethers";
 import axios from 'axios';
 
 export default {
-  name: 'LiveNFT',
   data () {
     return {
       ubg_address: "0x45527f75E9e69900Dd1A9C9e8af1240D4C5C9E89",
@@ -98,127 +98,124 @@ export default {
       prev: '',
       logs: false,
       connected: false,
-      tally:0
+      tally:0,
+      provider: false,
+      ubiContract: false,
+      ubiWithSigner: false,
+      ubgContract: false,
+      ubgWithSigner: false,
     }
   },
-  async mounted(){
-    window.ethereum.enable()
-    this.provider = await new ethers.providers.Web3Provider(window.ethereum)
-
-    this.provider = new ethers.providers.InfuraProvider("mainnet")
-    this.ubiContract = new ethers.Contract(this.ubi_address, this.ubi_abi, this.provider)
-    // this.ubiWithSigner = this.ubiContract.connect(this.signer)
-    this.ubgContract = new ethers.Contract(this.ubg_address, this.ubg_abi, this.provider)
-    // this.ubgWithSigner = this.ubgContract.connect(this.signer)
-    // console.log(this.provider)
-    // console.log(this.ubg)
-    this.getActiveTokenLoop()
+  mounted(){
+    this.setup();
   },
   methods: {
+    setup(){
+      console.log("setup");
+      this.provider = new ethers.providers.InfuraProvider("mainnet");
+      this.ubiContract = new ethers.Contract(this.ubi_address, this.ubi_abi, this.provider);
+      this.ubgContract = new ethers.Contract(this.ubg_address, this.ubg_abi, this.provider);
+      this.getActiveTokenLoop();
+    },
     async connectWallet(){
-      console.log("connecting to mm")
-       window.ethereum.enable()
-      this.provider = await new ethers.providers.Web3Provider(window.ethereum)
-      this.signer = await this.provider.getSigner()
+      console.log("connecting to mm");
+      window.ethereum.enable();
+      this.provider = await new ethers.providers.Web3Provider(window.ethereum);
+      this.signer = await this.provider.getSigner();
       // console.log(this.signer)
       // this.provider = new ethers.providers.InfuraProvider("mainnet")
-      this.ubiContract = new ethers.Contract(this.ubi_address, this.ubi_abi, this.provider)
-      this.ubiWithSigner = this.ubiContract.connect(this.signer)
-      this.ubgContract = new ethers.Contract(this.ubg_address, this.ubg_abi, this.provider)
-      this.ubgWithSigner = this.ubgContract.connect(this.signer)
-      this.connected = true
+      this.ubiContract = new ethers.Contract(this.ubi_address, this.ubi_abi, this.provider);
+      this.ubiWithSigner = this.ubiContract.connect(this.signer);
+      this.ubgContract = new ethers.Contract(this.ubg_address, this.ubg_abi, this.provider);
+      this.ubgWithSigner = this.ubgContract.connect(this.signer);
+      this.connected = true;
     },
     async checkUBIApproved(){
       this.signer.getAddress()
-        .then(address => this.ubiContract.allowance(address, this.ubg_address)
-          .then(allowance => {
-            // console.log(allowance, this.costdeci)
+        .then((address) => this.ubiContract.allowance(address, this.ubg_address)
+          .then((allowance) => {
             if(allowance.eq(this.costdeci)){
-              this.approved = true
+              this.approved = true;
             }
           })
         )
     },
     async approveUBI(){
-      this.approveText = "APPROVING"
+      this.approveText = "APPROVING";
       this.ubiWithSigner.approve(this.ubg_address, this.costdeci)
-        .then(res =>{
-          this.checkUBIApproved()
+        .then((res) =>{
+          this.checkUBIApproved();
         })
     },
     async displayNewNFT(){
-      this.displayText = "UPDATING"
+      this.displayText = "UPDATING";
       this.ubgWithSigner.display(this.new_nft_address, this.new_nft_id)
-          .then(res => {
-            console.log(res)
+          .then((res) => {
+            console.log(res);
           })
           .catch(err => {
-            console.log(err)
+            console.log(err);
           })
     },
     async getLogs(){ 
       this.logs = await this.ubgContract.queryFilter('Displaying', 12800929, 'latest')
-        .then(res=>{
-          console.log(res)
-          return res
+        .then((res) =>{
+          console.log(res);
+          return res;
         })
     },
     async getActiveTokenLoop(){
-      this.name = await this.ubgContract.name()
+      this.name = await this.ubgContract.name();
       if(this.name != this.prev){
-        this.getLogs()
-        this.idx = await this.ubgContract.activeNFTindex()
-        this.tokenURI = await this.ubgContract.tokenURI(0) 
-        this.costdeci = await this.ubgContract.cost()
-        this.tally = ethers.utils.formatEther(await this.ubgContract.tally())
-        this.cost = ethers.utils.formatEther(this.costdeci)
-        this.lastUpdate = await this.ubgContract.lastUpdate()
+        this.getLogs();
+        this.idx = await this.ubgContract.activeNFTindex();
+        this.tokenURI = await this.ubgContract.tokenURI(0) ;
+        this.costdeci = await this.ubgContract.cost();
+        this.tally = ethers.utils.formatEther(await this.ubgContract.tally());
+        this.cost = ethers.utils.formatEther(this.costdeci);
+        this.lastUpdate = await this.ubgContract.lastUpdate();
 
-        if(this.connected){this.checkUBIApproved()}
+        if(this.connected){this.checkUBIApproved();}
         
 
         if(this.tokenURI.substring(0, 7) == 'ipfs://'){
-          this.isIPFS = true
-          this.tokenURI = this.tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/')
+          this.isIPFS = true;
+          this.tokenURI = this.tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/');
         }
-        console.log("loading metadata", this.tokenURI)
-        let response = await axios.get(this.tokenURI)
+        console.log("loading metadata", this.tokenURI);
+        var response = await axios.get(this.tokenURI)
           .then(async(res) => {
-              console.log(res.data)
+              console.log(res.data);
               if(this.isIPFS){
-                let im = res.data.image.replace('ipfs://', '')
-                this.image = "https://ipfs.io/ipfs/"+im
+                var im = res.data.image.replace('ipfs://', '');
+                this.image = "https://ipfs.io/ipfs/"+im;
               }else{
-                this.image = res.data.image
+                this.image = res.data.image;
               }
-              this.description = res.data.description
+              this.description = res.data.description;
               if(typeof res.data.name != 'undefined' && 
                  typeof res.data.description == 'undefined' ){
-                this.description = res.data.name
+                this.description = res.data.name;
               }
-              return res
+              return res;
           })
           .catch((error)=>{
-              console.log(error)
-              return false
+              console.log(error);
+              return false;
           })
         
-        this.prev = this.name
+        this.prev = this.name;
       }else{
-        console.log("no change")
+        console.log("no change");
       }
       
-      setTimeout(this.getActiveTokenLoop, 14000)
-      // this.ubgContract.on("Displaying", (sender, nft, idx) => {
-      //     console.log(sender, nft, idx);
-      //     this.getActiveTokenLoop()
-      // });
+      setTimeout(this.getActiveTokenLoop, 14000);
+
     }
   }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .description {
   text-align: justify;
