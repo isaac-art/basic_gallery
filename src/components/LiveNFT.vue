@@ -12,7 +12,10 @@
     
     </p>
 
-    <div id="displayWindow">
+    <div v-if="connected == false">
+      <button @click="connectWallet()">CONNECT WALLET</button>
+    </div>
+    <div id="displayWindow" v-else>
 
       <button v-if="approved == false" @click="approveUBI()">{{approveText}}</button>
 
@@ -93,24 +96,38 @@ export default {
       new_nft_id: null,
       new_nft_address: '',
       prev: '',
-      logs: false
+      logs: false,
+      connected: false,
+      tally:0
     }
   },
   async mounted(){
     window.ethereum.enable()
     this.provider = await new ethers.providers.Web3Provider(window.ethereum)
-    this.signer = await this.provider.getSigner()
-    // console.log(this.signer)
-    // this.provider = new ethers.providers.InfuraProvider("kovan")
+
+    this.provider = new ethers.providers.InfuraProvider("mainnet")
     this.ubiContract = new ethers.Contract(this.ubi_address, this.ubi_abi, this.provider)
-    this.ubiWithSigner = this.ubiContract.connect(this.signer)
+    // this.ubiWithSigner = this.ubiContract.connect(this.signer)
     this.ubgContract = new ethers.Contract(this.ubg_address, this.ubg_abi, this.provider)
-    this.ubgWithSigner = this.ubgContract.connect(this.signer)
+    // this.ubgWithSigner = this.ubgContract.connect(this.signer)
     // console.log(this.provider)
     // console.log(this.ubg)
     this.getActiveTokenLoop()
   },
   methods: {
+    async connectWallet(){
+      console.log("connecting to mm")
+       window.ethereum.enable()
+      this.provider = await new ethers.providers.Web3Provider(window.ethereum)
+      this.signer = await this.provider.getSigner()
+      // console.log(this.signer)
+      // this.provider = new ethers.providers.InfuraProvider("mainnet")
+      this.ubiContract = new ethers.Contract(this.ubi_address, this.ubi_abi, this.provider)
+      this.ubiWithSigner = this.ubiContract.connect(this.signer)
+      this.ubgContract = new ethers.Contract(this.ubg_address, this.ubg_abi, this.provider)
+      this.ubgWithSigner = this.ubgContract.connect(this.signer)
+      this.connected = true
+    },
     async checkUBIApproved(){
       this.signer.getAddress()
         .then(address => this.ubiContract.allowance(address, this.ubg_address)
@@ -156,7 +173,9 @@ export default {
         this.tally = ethers.utils.formatEther(await this.ubgContract.tally())
         this.cost = ethers.utils.formatEther(this.costdeci)
         this.lastUpdate = await this.ubgContract.lastUpdate()
-        this.checkUBIApproved()
+
+        if(this.connected){this.checkUBIApproved()}
+        
 
         if(this.tokenURI.substring(0, 7) == 'ipfs://'){
           this.isIPFS = true
