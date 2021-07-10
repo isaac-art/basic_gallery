@@ -106,18 +106,7 @@ export default {
       ubgWithSigner: false,
     }
   },
-  mounted(){
-    this.setup();
-  },
-  methods: {
-    setup(){
-      console.log("setup");
-      this.provider = new ethers.providers.InfuraProvider("mainnet");
-      this.ubiContract = new ethers.Contract(this.ubi_address, this.ubi_abi, this.provider);
-      this.ubgContract = new ethers.Contract(this.ubg_address, this.ubg_abi, this.provider);
-      this.getActiveTokenLoop();
-    },
-    async connectWallet(){
+  async mounted(){
       console.log("connecting to mm");
       window.ethereum.enable();
       this.provider = await new ethers.providers.Web3Provider(window.ethereum);
@@ -129,7 +118,9 @@ export default {
       this.ubgContract = new ethers.Contract(this.ubg_address, this.ubg_abi, this.provider);
       this.ubgWithSigner = this.ubgContract.connect(this.signer);
       this.connected = true;
-    },
+      this.getActiveTokenLoop();
+  },
+  methods: {
     async checkUBIApproved(){
       this.signer.getAddress()
         .then((address) => this.ubiContract.allowance(address, this.ubg_address)
