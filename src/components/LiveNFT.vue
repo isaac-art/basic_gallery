@@ -171,7 +171,9 @@ export default {
 
         if(this.tokenURI.substring(0, 7) == 'ipfs://'){
           this.isIPFS = true;
-          this.tokenURI = this.tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/');
+          this.tokenURI = this.tokenURI.replace('ipfs://', '');
+          this.tokenURI = this.tokenURI.replace('ipfs/', '');
+          this.tokenURI = "https://ipfs.io/ipfs/"+this.tokenURI
         }
         console.log("loading metadata", this.tokenURI);
         var response = await axios.get(this.tokenURI)
@@ -179,6 +181,7 @@ export default {
               console.log(res.data);
               if(this.isIPFS){
                 var im = res.data.image.replace('ipfs://', '');
+                im = im.replace('ipfs/', '');
                 this.image = "https://ipfs.io/ipfs/"+im;
               }else{
                 this.image = res.data.image;
