@@ -1,8 +1,11 @@
 <template>
   <div class="hello">
     <img v-if="image" :src="image">
-    <h1>{{name}} <span v-if="idx">#{{idx}}</span></h1>
-    <p v-if="description" class="description">{{description}}</p>
+    <h1>{{name}}</h1>
+    <p v-if="description" class="description">
+    {{contractName}} <span v-if="idx">#{{idx}}</span><br>
+    {{description}}
+    </p>
     <br>
     <hr>
     <br>
@@ -85,6 +88,7 @@ export default {
       ],
       ubg: false,
       name: "",
+      contractName: "",
       costdeci: false,
       cost: false,
       tokenURI: false,
@@ -167,11 +171,11 @@ export default {
       this.latestTimestamp = await this.provider.getBlock("latest").then(res=> {
           return res.timestamp
         })
-      this.name = await this.ubgContract.name();
-      if(this.name != this.prev){
+      this.tokenURI = await this.ubgContract.tokenURI(0) ;
+      if(this.tokenURI != this.prev){
         this.getLogs();
+        this.contractName = await this.ubgContract.name();
         this.idx = await this.ubgContract.activeNFTindex();
-        this.tokenURI = await this.ubgContract.tokenURI(0) ;
         this.costdeci = await this.ubgContract.cost();
         this.tally = ethers.utils.formatEther(await this.ubgContract.tally());
         this.cost = ethers.utils.formatEther(this.costdeci);
@@ -198,10 +202,7 @@ export default {
                 this.image = res.data.image;
               }
               this.description = res.data.description;
-              if(typeof res.data.name != 'undefined' && 
-                 typeof res.data.description == 'undefined' ){
-                this.description = res.data.name;
-              }
+              this.name = res.data.name
               return res;
           })
           .catch((error)=>{
@@ -209,7 +210,7 @@ export default {
               return false;
           })
         
-        this.prev = this.name;
+        this.prev = this.tokenURI;
       }else{
         console.log("no change");
       }
