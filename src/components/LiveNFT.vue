@@ -8,7 +8,9 @@
     <br>
     <p>The artwork on display can be changed by burning UBI tokens via the gallery contract.<br><br> 
     The price will increase by 24 UBI with each new display, and half every 24 hours.<br><br>
-    Click below to approve burning UBI with the gallery contract, and then choose a new NFT to display for a cost of <span v-if="cost">{{cost}}</span><span v-else>...</span> UBI. <br><br>
+    Click below to approve burning UBI with the gallery contract, and then choose a new NFT to display for a cost of <span v-if="cost">{{cost}}</span><span v-else>...</span> UBI. The cost can be halved in {{ Math.round( (((latestTimestamp - lastUpdate)/60)/60)*10)/10 }}  hours.
+    <br><br>
+     <button @click="updatePrice()" v-if="latestTimestamp - lastUpdate >= 86400">UPDATE PRICE</button> 
     
     </p>
 
@@ -87,7 +89,7 @@ export default {
       cost: false,
       tokenURI: false,
       image: false,
-      lastUpdate: false,
+      lastUpdate: 0,
       idx: false,
       description: false,
       approved: false,
@@ -104,6 +106,7 @@ export default {
       ubiWithSigner: false,
       ubgContract: false,
       ubgWithSigner: false,
+      latestTimestamp: 0,
     }
   },
   async mounted(){
@@ -138,6 +141,15 @@ export default {
           this.checkUBIApproved();
         })
     },
+    async updatePrice(){
+      this.ubgWithSigner.updatePrice()
+        .then((res) => {
+          console.log(res)
+        })
+        .catch((err)=> {
+          console.log(err)
+        })
+    },
     async displayNewNFT(){
       this.displayText = "UPDATING";
       this.ubgWithSigner.display(this.new_nft_address, this.new_nft_id)
@@ -150,12 +162,11 @@ export default {
     },
     async getLogs(){ 
       this.logs = await this.ubgContract.queryFilter('Displaying', 12800929, 'latest')
-        .then((res) =>{
-          console.log(res);
-          return res;
-        })
     },
     async getActiveTokenLoop(){
+      this.latestTimestamp = await this.provider.getBlock("latest").then(res=> {
+          return res.timestamp
+        })
       this.name = await this.ubgContract.name();
       if(this.name != this.prev){
         this.getLogs();
@@ -245,6 +256,26 @@ img {
   /*margin: 50px;*/
   margin-top: 80px;
   margin-bottom: 80px;
+}
+
+input {
+  margin: 10px;
+  background: skyblue;
+  color:  white;
+  font-weight: bold;
+  border: 2px solid black;
+  width: 200px;
+  height: 40px;
+}
+
+button {
+  background: #42b983;
+  color: white;
+  font-weight: bold;
+  border:none;
+  width: 180px;
+  height: 50px;
+  margin: 20px;
 }
 
 table {
